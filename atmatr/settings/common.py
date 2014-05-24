@@ -15,6 +15,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'south',
+    'registration',
 ]
 
 MIDDLEWARE_CLASSES = (
@@ -45,3 +46,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR + 'public/media'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+#=============== DJANGO-REGISTRATION SETTINGS ==========
+
+ACCOUNT_ACTIVATION_DAYS = 7
