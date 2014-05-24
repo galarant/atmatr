@@ -7,7 +7,7 @@ PROJECT_NAME = 'atmatr'
 BASE_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../')
 SECRET_KEY = secret_settings.SECRET_KEY
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -15,7 +15,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'south',
-)
+]
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
