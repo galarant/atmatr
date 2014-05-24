@@ -1,6 +1,7 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+*.pyc
 
 # C extensions
 *.so
@@ -37,14 +38,6 @@ coverage.xml
 # Translations
 *.mo
 
-# Mr Developer
-.mr.developer.cfg
-.project
-.pydevproject
-
-# Rope
-.ropeproject
-
 # Django stuff:
 *.log
 *.pot
@@ -52,3 +45,8 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
+#Secret settings
+atmatr/settings/secret.py
+
+# Media
+media/*

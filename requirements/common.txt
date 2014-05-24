@@ -1,0 +1,4 @@
+Django<1.7.0
+MySQL-python
+django-registration
+pytz
