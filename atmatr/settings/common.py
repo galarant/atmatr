@@ -37,15 +37,15 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
 #=============== FRONT-END SETTINGS ====================
 
 # Static files
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR + 'public/static'
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR + 'public/media'
+STATICFILES_DIRS = (BASE_DIR + 'public/static/',)
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+TEMPLATE_DIRS = (BASE_DIR + '/apps/frontend/templates/',)
 
 #=============== DJANGO-REGISTRATION SETTINGS ==========
 

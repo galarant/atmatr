@@ -1,10 +1,22 @@
 <!DOCTYPE html>
+<link rel="shortcut icon" type="image/gif" href="{{STATIC_URL}}images/favicon.ico"/>
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}styles/bijou.min.css"/>
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}styles/main.css"/>
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}styles/index.css"/>
 <html>
     <head>
-        <title>My Project</title>
+        <title>The Automator</title>
     </head>
 
-    <body>
-    {% block content %}{% endblock %}
+    <body style="margin-top:60px">
+        <div class="navbar fixed">
+            <div class="container">
+                <h4 class="pull-left">The Automator</h4>
+            </div>
+        </div>
+        {% load i18n %}
+        <div class="container main">
+            {% block content %}{% endblock %}
+        </div>
     </body>
 </html>
