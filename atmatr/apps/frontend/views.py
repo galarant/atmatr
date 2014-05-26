@@ -43,6 +43,12 @@ class ActivationView(RegistrationView):
     Handles special behavior on registration, like sending email and setting the cookie
     """
 
+    def get_success_url(self, request, user):
+        """
+        Provides a custom success url
+        """
+        return 'index'
+
     def post(self, request, **kwargs):
         send_mail(subject=get_template('activation_email_subject.txt').render(Context({})).strip(),
                   message=get_template('activation_email.txt').render(Context(request.POST)),
