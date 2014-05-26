@@ -46,6 +46,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 STATIC_URL = '/static/'
 STATICFILES_DIRS = (BASE_DIR + 'public/static/',)
 LOGIN_URL = '/welcome/'
+LOGIN_REDIRECT_URL = 'index'
 
 TEMPLATE_DIRS = (BASE_DIR + '/apps/frontend/templates/',
                  BASE_DIR + '/apps/frontend/templates/registration/',)
