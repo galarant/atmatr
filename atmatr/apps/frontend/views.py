@@ -1,14 +1,38 @@
 from django.conf import settings
 from django.shortcuts import render
-from django.views.generic.base import TemplateView
+from django.views.generic import View
+from django.utils.decorators import method_decorator
 from django.template.loader import get_template
 from django.template import Context
 from django.core.mail import send_mail
 
+from django.views.generic.base import(
+    TemplateView,
+    RedirectView,
+)
+
+from django.contrib.auth.decorators import(
+    login_required,
+    permission_required,
+    user_passes_test,
+)
+
 from registration.backends.simple.views import RegistrationView
 
 
-class IndexView(TemplateView):
+class AuthenticatedView(View):
+
+    @method_decorator(login_required())
+    def dispatch(self, *args, **kwargs):
+        return super(AuthenticatedView, self).dispatch(*args, **kwargs)
+
+
+class WelcomeView(TemplateView):
+
+    template_name = 'welcome.html'
+
+
+class IndexView(AuthenticatedView, TemplateView):
 
     template_name = 'index.html'
 
