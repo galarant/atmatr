@@ -16,6 +16,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'south',
     'registration',
+    'atmatr.apps.frontend',
 ]
 
 MIDDLEWARE_CLASSES = (
@@ -45,7 +46,20 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 STATIC_URL = '/static/'
 STATICFILES_DIRS = (BASE_DIR + 'public/static/',)
 
-TEMPLATE_DIRS = (BASE_DIR + '/apps/frontend/templates/',)
+TEMPLATE_DIRS = (BASE_DIR + '/apps/frontend/templates/',
+                 BASE_DIR + '/apps/frontend/templates/registration/',)
+TEMPLATE_CONTEXT_PROCESSORS = (
+    # default context processors
+    "django.contrib.auth.context_processors.auth",
+    "django.core.context_processors.debug",
+    "django.core.context_processors.i18n",
+    "django.core.context_processors.media",
+    "django.core.context_processors.static",
+    "django.core.context_processors.tz",
+    "django.contrib.messages.context_processors.messages",
+    # context processors for 'myproject'
+    "atmatr.context_processors.baseurl",
+)
 
 #=============== DJANGO-REGISTRATION SETTINGS ==========
 
