@@ -16,8 +16,8 @@
       <tr>
           <td colspan="2">{% trans "Forgot your password" %}? <a href="{% url 'auth_password_reset' %}">{% trans "Reset it" %}</a>!</td>
       </tr>
-      <input type="hidden" name="next" value="{{ next }}" />
   </table>
+  <input type="hidden" name="next" value="{{ next }}" />
 </form>
 
 {% endblock %}
