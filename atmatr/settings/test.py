@@ -7,7 +7,7 @@ DEBUG = True
 TEMPLATE_DEBUG = True
 ALLOWED_HOSTS = []
 
-INSTALLED_APPS = INSTALLED_APPS + ['django_nose', 'debug_toolbar',]
+INSTALLED_APPS = INSTALLED_APPS + ['django_nose', 'debug_toolbar', ]
 MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + ['debug_toolbar.middleware.DebugToolbarMiddleware']
 
 EMAIL_HOST = 'mailtrap.io'
