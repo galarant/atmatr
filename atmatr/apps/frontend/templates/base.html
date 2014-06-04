@@ -11,6 +11,9 @@
         <div class="navbar fixed">
             <div class="container">
                 <h4 class="pull-left"><a href="{{BASE_URL}}" style="color:black">The Automator</a></h4>
+                {% if user.is_authenticated %}
+                    <h4 class="pull-right"><a href="{{BASE_URL}}admin/logout?next={{BASE_URL}}" style="color">Log out</a></h4>
+                {% endif %}
             </div>
         </div>
         {% load i18n %}

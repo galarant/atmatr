@@ -1,3 +1,4 @@
 -r common.txt
 autopep8
 django-nose
+django-debug-toolbar
