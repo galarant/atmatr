@@ -42,6 +42,7 @@ class IndexView(AuthenticatedView, TemplateView):
 
 
 class ActivationView(RegistrationView):
+
     """
     Handles special behavior on registration, like sending email and setting the cookie
     """
@@ -59,7 +60,9 @@ class ActivationView(RegistrationView):
                   recipient_list=[request.POST['email']])
         return super(ActivationView, self).post(request, **kwargs)
 
+
 class DeactivationView(RedirectView):
+
     """
     Deactivates the user if they have the proper code
     """
