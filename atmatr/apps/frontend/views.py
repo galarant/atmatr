@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.shortcuts import render
 from django.views.generic import View
 from django.utils.decorators import method_decorator
 from django.template.loader import get_template
@@ -15,6 +14,11 @@ from django.contrib.auth.decorators import(
     login_required,
     permission_required,
     user_passes_test,
+)
+
+from django.shortcuts import (
+    render,
+    redirect
 )
 
 from registration.backends.simple.views import RegistrationView
@@ -38,7 +42,6 @@ class IndexView(AuthenticatedView, TemplateView):
 
 
 class ActivationView(RegistrationView):
-
     """
     Handles special behavior on registration, like sending email and setting the cookie
     """
@@ -55,3 +58,24 @@ class ActivationView(RegistrationView):
                   from_email=settings.SERVER_EMAIL,
                   recipient_list=[request.POST['email']])
         return super(ActivationView, self).post(request, **kwargs)
+
+class DeactivationView(RedirectView):
+    """
+    Deactivates the user if they have the proper code
+    """
+
+    permanent = False
+    pattern_name = 'welcome'
+
+    def get(self, request, **kwargs):
+        print "I AM PROCESSING THE GET REQUEST"
+        try:
+            if kwargs['deactivation_code'] == request.user.password:
+                request.user.is_active = False
+                request.user.save()
+            else:
+                print "BAD CODE. USER NOT DEACTIVATED"
+        except (AttributeError, KeyError):
+            print "CANNOT DEACTIVATE ANONYMOUS USER"
+            pass
+        return super(DeactivationView, self).get(request, **kwargs)
