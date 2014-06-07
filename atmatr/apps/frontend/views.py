@@ -1,9 +1,11 @@
+import hashlib
+
 from django.conf import settings
 from django.views.generic import View
 from django.utils.decorators import method_decorator
 from django.template.loader import get_template
 from django.template import Context
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 
 from django.views.generic.base import(
     TemplateView,
@@ -20,6 +22,8 @@ from django.shortcuts import (
     render,
     redirect
 )
+
+from django.contrib.auth.models import User
 
 from registration.backends.simple.views import RegistrationView
 
@@ -54,10 +58,15 @@ class ActivationView(RegistrationView):
         return 'index'
 
     def post(self, request, **kwargs):
-        send_mail(subject=get_template('activation_email_subject.txt').render(Context({})).strip(),
-                  message=get_template('activation_email.txt').render(Context(request.POST)),
-                  from_email=settings.SERVER_EMAIL,
-                  recipient_list=[request.POST['email']])
+        mail_context = request.POST.copy()
+        mail_context['deactivation_code'] = hashlib.md5(mail_context['username']).hexdigest()
+        mail_context['http_host'] = request.META['HTTP_HOST']
+        msg = EmailMultiAlternatives(subject=get_template('activation_email_subject.txt').render(Context({})).strip(),
+                                     body=get_template('activation_email.txt').render(Context(mail_context)),
+                                     from_email=settings.SERVER_EMAIL,
+                                     to=[request.POST['email']])
+        msg.attach_alternative(get_template('activation_email.txt').render(Context(mail_context)), "text/html")
+        msg.send()
         return super(ActivationView, self).post(request, **kwargs)
 
 
@@ -71,14 +80,12 @@ class DeactivationView(RedirectView):
     pattern_name = 'welcome'
 
     def get(self, request, **kwargs):
-        print "I AM PROCESSING THE GET REQUEST"
-        try:
-            if kwargs['deactivation_code'] == request.user.password:
-                request.user.is_active = False
-                request.user.save()
-            else:
-                print "BAD CODE. USER NOT DEACTIVATED"
-        except (AttributeError, KeyError):
-            print "CANNOT DEACTIVATE ANONYMOUS USER"
-            pass
+        code = request.GET.get('code')
+        if code:
+            # this is really stupid but I don't want to extend the User model right now
+            for user in User.objects.all():
+                user_code = hashlib.md5(user.username).hexdigest()
+                if user_code == code:
+                    user.is_active = False
+                    user.save()
         return super(DeactivationView, self).get(request, **kwargs)
