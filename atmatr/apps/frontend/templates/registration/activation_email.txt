@@ -1,4 +1,12 @@
 {% load i18n %}
 {% trans "Hello" %} {{ username }},
 
+<p>
 {% trans "Your account at" %} The Automator {% trans "is active!" %}
+</p>
+
+<p>
+{% blocktrans %}
+Didn't sign up for this service? Click <a href="http://{{http_host}}/accounts/deactivate/?code={{deactivation_code}}">here</a> to deactivate your account.
+{% endblocktrans %}
+</p>
