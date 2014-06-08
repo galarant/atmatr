@@ -11,7 +11,7 @@ from atmatr.apps.frontend.views import (
     DeactivationView,
 )
 
-urlpatterns = patterns((r'^favicon\.ico$', RedirectView.as_view(url='/static/images/favicon.ico')),
+urlpatterns = patterns(url(r'^favicon\.ico$', RedirectView.as_view(url='/static/images/favicon.ico')),
                        url(r'^$', IndexView.as_view(), name='index'),
                        url(r'^welcome/$', WelcomeView.as_view(), name='welcome'),
                        url(r'^accounts/register/$', ActivationView.as_view(), name='register'),

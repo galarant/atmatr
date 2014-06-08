@@ -12,6 +12,10 @@ input {font-family:inherit;
        padding:2px;
 }
 
+input[type="url"] {
+    width: 400px;
+}
+
 /* specialized utility classes */
 
 .explainer {

@@ -1,16 +1,19 @@
+from __future__ import absolute_import
 import hashlib
 
 from django.conf import settings
-from django.views.generic import View
 from django.utils.decorators import method_decorator
 from django.template.loader import get_template
 from django.template import Context
 from django.core.mail import EmailMultiAlternatives
 
 from django.views.generic.base import(
+    View,
     TemplateView,
     RedirectView,
 )
+
+from django.views.generic.edit import FormView
 
 from django.contrib.auth.decorators import(
     login_required,
@@ -27,6 +30,10 @@ from django.contrib.auth.models import User
 
 from registration.backends.simple.views import RegistrationView
 
+from .forms import(
+    IndexForm,
+)
+
 
 class AuthenticatedView(View):
 
@@ -37,12 +44,11 @@ class AuthenticatedView(View):
 
 class WelcomeView(TemplateView):
 
+    """
+    A simple Welcome page for anonymous users
+    """
+
     template_name = 'welcome.html'
-
-
-class IndexView(AuthenticatedView, TemplateView):
-
-    template_name = 'index.html'
 
 
 class ActivationView(RegistrationView):
@@ -89,3 +95,26 @@ class DeactivationView(RedirectView):
                     user.is_active = False
                     user.save()
         return super(DeactivationView, self).get(request, **kwargs)
+
+
+class IndexView(AuthenticatedView, FormView):
+
+    """
+    Starts the user experience.
+    This logic will probably be moved somewhere else once the project becomes less linear
+    """
+
+    template_name = 'index.html'
+    form_class = IndexForm
+    success_url = '/'
+
+    def post(self, request, **kwargs):
+        print "GOT THE URL: %s" % request.POST['starting_page']
+        return super(IndexView, self).post(request, **kwargs)
+
+    def form_valid(self, form):
+        """
+        Doesn't really do much right now.
+        In the future it will scrape the initial URL and redirect to the ActionTree experience.
+        """
+        return super(IndexView, self).form_valid(form)
