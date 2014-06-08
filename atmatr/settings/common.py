@@ -17,6 +17,7 @@ INSTALLED_APPS = [
     'south',
     'registration',
     'atmatr.apps.frontend',
+    'atmatr.apps.scraper',
 ]
 
 MIDDLEWARE_CLASSES = [
