@@ -3,3 +3,4 @@ MySQL-python
 django-registration
 pytz
 south
+selenium
