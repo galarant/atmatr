@@ -2,11 +2,22 @@ from __future__ import absolute_import
 from django.db import models
 from atmatr.models import (
     ucModel,
+    NamedModel,
     TimestampModel,
     ExtendedModel,
 )
 
 # MODELS TO REPRESENT ABSTRACT FUNCTION DEFINITIONS
+
+
+class DataType(NamedModel):
+
+    """
+    This model represents the basic data types that are supported by the application.
+    To start we should stick with simple JSON-supported data types and nothing else.
+    """
+
+    pass
 
 
 class ClassDef(ExtendedModel):
@@ -27,6 +38,8 @@ class FunctionDef(ExtendedModel):
     """
 
     klass = models.ForeignKey(ClassDef, null=True)
+    is_method = models.NullBooleanField()  # True = class method, False = class attribute, Null = base function
+    return_type = models.ForeignKey(ClassDef, null=True, related_name='+')  # helps to chain actions
 
 
 class ArgDef(ucModel, TimestampModel):
@@ -36,16 +49,9 @@ class ArgDef(ucModel, TimestampModel):
     http://selenium-python.readthedocs.org/en/latest/
     """
 
-    JSON_DATA_TYPES = (('object', 'object'),
-                       ('array', 'array'),
-                       ('string', 'string'),
-                       ('int', 'int'),
-                       ('float', 'float'),
-                       ('boolean', 'boolean'))
-
     function = models.ForeignKey(FunctionDef, related_name="args")
     position = models.SmallIntegerField()
-    data_type = models.CharField(max_length=32, choices=JSON_DATA_TYPES)
+    data_type = models.ForeignKey(DataType)
 
 
 class KwargDef(ExtendedModel):
@@ -55,12 +61,5 @@ class KwargDef(ExtendedModel):
     http://selenium-python.readthedocs.org/en/latest/
     """
 
-    JSON_DATA_TYPES = (('object', 'object'),
-                       ('array', 'array'),
-                       ('string', 'string'),
-                       ('int', 'int'),
-                       ('float', 'float'),
-                       ('boolean', 'boolean'))
-
     function = models.ForeignKey(FunctionDef, related_name="kwargs")
-    data_type = models.CharField(max_length=32, choices=JSON_DATA_TYPES)
+    data_type = models.ForeignKey(DataType)
