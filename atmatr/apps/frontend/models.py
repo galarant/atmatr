@@ -13,6 +13,8 @@ from ..scraper.models import(
     KwargDef,
 )
 
+from selenium import webdriver
+
 # APPLICATION MODELS
 
 
@@ -51,6 +53,41 @@ class Action(ExtendedModel):
     action_tree = models.ForeignKey(ActionTree, related_name="actions")
     previous_action = models.ForeignKey('self', null=True, blank=True, related_name="next_actions")
     function = models.ForeignKey(FunctionDef)
+
+    def klass_instance(self):
+        """
+        Returns an instance of self.function.klass
+        """
+
+        return eval("%s()" % self.function.klass.name) if self.function.klass else None
+
+    def args_string(self):
+        """
+        Returns a string-formatted list of the action's positional arguments
+        """
+        my_ordered_vals = sorted(self.args.all(), key=lambda v: v.arg_def.position)
+
+        return ",".join([v.value for v in my_ordered_vals])
+
+    def kwargs_string(self):
+        """
+        Returns a string-formatted list of the action's keyword arguments
+        """
+
+        return ",".join(['{0}={1}'.format(kwarg.arg_def.name, kwarg.value) for kwarg in self.kwargs.all()])
+
+    def callable_string(self):
+        """
+        Forms a callable string from the action
+        """
+
+        if self.function.klass and self.function.is_method == False:
+            return self.function.name
+
+        return '{0}({1}{2}{3})'.format(self.function.name,
+                                       ", " if (self.kwargs.all() and self.args.all()) else "",
+                                       self.args_string(),
+                                       self.kwargs_string())
 
 
 class ActionArg(ucModel, TimestampModel):
