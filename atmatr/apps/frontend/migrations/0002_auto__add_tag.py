@@ -17,11 +17,9 @@ class Migration(SchemaMigration):
         ))
         db.send_create_signal(u'frontend', ['Tag'])
 
-
     def backwards(self, orm):
         # Deleting model 'Tag'
         db.delete_table(u'frontend_tag')
-
 
     models = {
         u'auth.group': {

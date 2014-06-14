@@ -4,10 +4,11 @@ from south.db import db
 from south.v2 import DataMigration
 from django.db import models
 
+
 class Migration(DataMigration):
 
     def forwards(self, orm):
-        for tag in orm.Tag.objects.filter(name__in=['html','body','head']):
+        for tag in orm.Tag.objects.filter(name__in=['html', 'body', 'head']):
             tag.show_content = False
             tag.save()
 

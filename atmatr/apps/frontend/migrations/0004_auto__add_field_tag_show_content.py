@@ -13,11 +13,9 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.BooleanField')(default=True),
                       keep_default=False)
 
-
     def backwards(self, orm):
         # Deleting field 'Tag.show_content'
         db.delete_column(u'frontend_tag', 'show_content')
-
 
     models = {
         u'auth.group': {

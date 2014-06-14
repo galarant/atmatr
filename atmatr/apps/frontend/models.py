@@ -34,13 +34,11 @@ class Page(BeautifulSoup):
 
     @property
     def json(self):
-
         """
         Serializes the soup into a JSON object with only the attributes that are important for our app
         """
 
         def dictify_tag(tag):
-
             """
             Turns a tag into a dict, keeping only the attributes we are interested in
             Recursively adds the tag's children as well
@@ -53,7 +51,7 @@ class Page(BeautifulSoup):
                     'attrs': tag.attrs,
                     'contents': str(tag.contents) if tag.name in SHOW_CONTENT else None,
                     'children': [dictify_tag(child) for child in tag.children
-                                    if type(child) == bs4_Tag and child.name in ALLOWED_TAGS]}
+                                 if type(child) == bs4_Tag and child.name in ALLOWED_TAGS]}
 
         if not getattr(self, '_json'):
             if not self.find('html'):
@@ -98,10 +96,8 @@ class ActionTree(ExtendedModel):
     previous_page = models.ForeignKey('self', null=True, blank=True, related_name="next_pages")
     url = models.URLField(max_length=2048)
 
-
     @property
     def webdriver(self):
-
         """
         Initializes a webdriver session for this object if one does not already exist
         Navigates the webdriver to the object's url
@@ -118,7 +114,6 @@ class ActionTree(ExtendedModel):
 
     @property
     def page(self):
-
         """
         Retrieves the page for this object if one does not already exist
         """

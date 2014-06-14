@@ -4,21 +4,21 @@ from south.db import db
 from south.v2 import DataMigration
 from django.db import models
 
+
 class Migration(DataMigration):
 
     def forwards(self, orm):
-
         """
         Adds models for the basic tags defined in:
         http://www.webmonkey.com/2010/02/html_cheatsheet/
         """
 
-        #BASIC TAGS
+        # BASIC TAGS
         orm.Tag.objects.create(name='html')
         orm.Tag.objects.create(name='head')
         orm.Tag.objects.create(name='body')
 
-        #TEXT TAGS
+        # TEXT TAGS
         orm.Tag.objects.create(name='h1')
         orm.Tag.objects.create(name='h2')
         orm.Tag.objects.create(name='h3')
@@ -38,10 +38,10 @@ class Migration(DataMigration):
         orm.Tag.objects.create(name='sup')
         orm.Tag.objects.create(name='sub')
 
-        #LINK TAG
+        # LINK TAG
         orm.Tag.objects.create(name='a')
 
-        #FORMATTING TAGS
+        # FORMATTING TAGS
         orm.Tag.objects.create(name='p')
         orm.Tag.objects.create(name='blockquote')
         orm.Tag.objects.create(name='dl')
@@ -53,16 +53,16 @@ class Migration(DataMigration):
         orm.Tag.objects.create(name='div')
         orm.Tag.objects.create(name='img')
 
-        #TABLE TAGS
+        # TABLE TAGS
         orm.Tag.objects.create(name='table')
         orm.Tag.objects.create(name='th')
         orm.Tag.objects.create(name='tr')
         orm.Tag.objects.create(name='td')
 
-        #FRAME TAG
+        # FRAME TAG
         orm.Tag.objects.create(name='frame')
 
-        #FORM TAGS
+        # FORM TAGS
         orm.Tag.objects.create(name='form')
         orm.Tag.objects.create(name='select')
         orm.Tag.objects.create(name='option')
@@ -75,7 +75,6 @@ class Migration(DataMigration):
         all_tags = orm.Tag.objects.all()
         for tag in all_tags:
             tag.delete()
-
 
     models = {
         u'auth.group': {
