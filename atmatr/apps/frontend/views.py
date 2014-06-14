@@ -140,18 +140,6 @@ class IndexView(AuthenticatedView, FormView):
                                                         previous_page=None,
                                                         url=request.POST['starting_page'])
 
-        first_action = Action.objects.create(action_tree=initial_action_tree,
-                                             previous_action=None,
-                                             function=FunctionDef.objects.get(name='get', klass__name='webdriver.PhantomJS'))
-
-        first_action_kwargs = ActionKwarg.objects.create(action=first_action,
-                                                         arg_def=first_action.function.kwargs.get(name='url'),
-                                                         value=request.POST['starting_page'])
-
-        second_action = Action.objects.create(action_tree=initial_action_tree,
-                                              previous_action=first_action,
-                                              function=FunctionDef.objects.get(name='page_source', klass__name='webdriver.PhantomJS'))
-
         from pprint import pformat
         print """
               ========= PAGE_TREE ==========
@@ -160,24 +148,13 @@ class IndexView(AuthenticatedView, FormView):
               ========= ACTION_TREE ========
               {1}
 
-              ========= FIRST_ACTION =======
-              {2}
-
-              === FIRST_ACTION_CALLABLE ====
-              {3}
-
-              ========= SECOND_ACTION ======
-              {4}
-
-              === SECOND_ACTION_CALLABLE ===
-              {5}
+              === ACTION_TREE.PAGE.JSON ====
+              {6}
 
               """.format(pformat(initial_page_tree.__dict__),
                          pformat(initial_action_tree.__dict__),
-                         pformat(first_action.__dict__),
-                         pformat(first_action.callable_string()),
-                         pformat(second_action.__dict__),
-                         pformat(second_action.callable_string()))
+                         pformat(initial_action_tree.page.json),
+                         )
 
         return super(IndexView, self).post(request, **kwargs)
 

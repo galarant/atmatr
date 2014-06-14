@@ -1,3 +1,5 @@
+import json as python_json
+
 from django.db import models
 from django.contrib.auth.models import User
 from atmatr.models import (
@@ -13,10 +15,56 @@ from ..scraper.models import(
     KwargDef,
 )
 
+from bs4 import(
+    BeautifulSoup,
+)
+
+from bs4.element import Tag as bs4_Tag
+
 from selenium import webdriver
 
-# APPLICATION MODELS
 
+# SUPPORT CLASSES
+
+class Page(BeautifulSoup):
+
+    """
+    A BeautifulSoup child class that adds a custom JSON serializer
+    """
+
+    @property
+    def json(self):
+
+        """
+        Serializes the soup into a JSON object with only the attributes that are important for our app
+        """
+
+        def dictify_tag(tag):
+
+            """
+            Turns a tag into a dict, keeping only the attributes we are interested in
+            Recursively adds the tag's children as well
+            """
+            ALLOWED_TAGS = [t.name for t in Tag.objects.all()]
+            SHOW_CONTENT = [t.name for t in Tag.objects.filter(show_content=True)]
+
+            return {'name': tag.name,
+                    'namespace': tag.namespace,
+                    'attrs': tag.attrs,
+                    'contents': str(tag.contents) if tag.name in SHOW_CONTENT else None,
+                    'children': [dictify_tag(child) for child in tag.children
+                                    if type(child) == bs4_Tag and child.name in ALLOWED_TAGS]}
+
+        if not getattr(self, '_json'):
+            if not self.find('html'):
+                raise AttributeError("Cannot serialize: missing html tag")
+            tag_as_json = python_json.dumps(dictify_tag(self.find('html')))
+            self._json = tag_as_json
+
+        return self._json
+
+
+# APPLICATION MODELS
 
 class PageTree(ExtendedModel):
 
@@ -27,6 +75,15 @@ class PageTree(ExtendedModel):
 
     user = models.ForeignKey(User, related_name="page_trees")
     period = models.FloatField()  # Amount of time between successive playbacks, in seconds
+
+
+class Tag(ExtendedModel):
+
+    """
+    This model represents an HTML tag type
+    http://www.w3schools.com/tags/
+    """
+    show_content = models.BooleanField(default=True)
 
 
 class ActionTree(ExtendedModel):
@@ -40,6 +97,36 @@ class ActionTree(ExtendedModel):
     page_tree = models.ForeignKey(PageTree, related_name="action_trees")
     previous_page = models.ForeignKey('self', null=True, blank=True, related_name="next_pages")
     url = models.URLField(max_length=2048)
+
+
+    @property
+    def webdriver(self):
+
+        """
+        Initializes a webdriver session for this object if one does not already exist
+        Navigates the webdriver to the object's url
+        """
+
+        if not self.url:
+            raise AttributeError('Cannot initialize webdriver: missing url')
+
+        if not hasattr(self, '_selenium_session'):
+            self._webdriver = webdriver.PhantomJS()
+            self._webdriver.get(self.url)
+
+        return self._webdriver
+
+    @property
+    def page(self):
+
+        """
+        Retrieves the page for this object if one does not already exist
+        """
+
+        if not hasattr(self, '_page'):
+            self._page = Page(self.webdriver.page_source, 'html.parser')
+
+        return self._page
 
 
 class Action(ExtendedModel):

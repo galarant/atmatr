@@ -4,3 +4,4 @@ django-registration
 pytz
 south
 selenium
+beautifulsoup4
