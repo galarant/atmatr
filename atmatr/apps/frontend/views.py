@@ -41,8 +41,8 @@ from .forms import(
 )
 
 from .models import(
-    PageTree,
-    ActionTree,
+    Script,
+    Page,
     Action,
     ActionArg,
     ActionKwarg,
@@ -129,31 +129,30 @@ class IndexView(AuthenticatedView, FormView):
     def post(self, request, **kwargs):
         """
         For now, this method just handles the initial url request from the user.
-        It initializes a heirarchy of PageTree objects, scrapes the starting web page, and sends it back in the HttpResponse.
         """
 
         # TODO: We should definitely move this logic somewhere else very soon, but right here is fine for now
-        initial_page_tree = PageTree.objects.create(user=request.user,
-                                                    period=0)
+        initial_script = Script.objects.create(user=request.user,
+                                               period=0)
 
-        initial_action_tree = ActionTree.objects.create(page_tree=initial_page_tree,
-                                                        previous_page=None,
-                                                        url=request.POST['starting_page'])
+        initial_page = Page.objects.create(script=initial_script,
+                                           parent=None,
+                                           url=request.POST['starting_page'])
 
         from pprint import pformat
         print """
-              ========= PAGE_TREE ==========
+              ========= SCRIPT ======
               {0}
 
-              ========= ACTION_TREE ========
+              ========= PAGE ========
               {1}
 
-              === ACTION_TREE.PAGE.JSON ====
-              {6}
+              === PAGE.PAGE_SOURCE.JSON ====
+              {2}
 
-              """.format(pformat(initial_page_tree.__dict__),
-                         pformat(initial_action_tree.__dict__),
-                         pformat(initial_action_tree.page.json),
+              """.format(pformat(initial_script.__dict__),
+                         pformat(initial_page.__dict__),
+                         pformat(initial_page.page_source.json),
                          )
 
         return super(IndexView, self).post(request, **kwargs)
@@ -161,7 +160,7 @@ class IndexView(AuthenticatedView, FormView):
     def form_valid(self, form):
         """
         Doesn't really do much right now.
-        In the future it will scrape the initial URL and redirect to the ActionTree experience.
+        In the future it will scrape the initial URL and redirect to the main experience.
         """
 
         return super(IndexView, self).form_valid(form)
