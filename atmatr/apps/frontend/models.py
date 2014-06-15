@@ -106,7 +106,7 @@ class ActionTree(ExtendedModel):
         if not self.url:
             raise AttributeError('Cannot initialize webdriver: missing url')
 
-        if not hasattr(self, '_selenium_session'):
+        if not hasattr(self, '_webdriver'):
             self._webdriver = webdriver.PhantomJS()
             self._webdriver.get(self.url)
 
