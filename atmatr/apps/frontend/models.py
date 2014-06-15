@@ -17,6 +17,7 @@ from ..scraper.models import(
 
 from bs4 import(
     BeautifulSoup,
+    SoupStrainer,
 )
 
 from bs4.element import Tag as bs4_Tag
@@ -26,7 +27,7 @@ from selenium import webdriver
 
 # SUPPORT CLASSES
 
-class Page(BeautifulSoup):
+class PageSource(BeautifulSoup):
 
     """
     A BeautifulSoup child class that adds a custom JSON serializer
@@ -64,14 +65,14 @@ class Page(BeautifulSoup):
 
 # APPLICATION MODELS
 
-class PageTree(ExtendedModel):
+class Script(ExtendedModel):
 
     """
     This model represents the tree of pages to traverse during playback.
-    Each page in the tree is represented by an ActionTree object, which is 1:M with PageTree.
+    Each page in the tree is represented by an Page object, which is 1:M with Script.
     """
 
-    user = models.ForeignKey(User, related_name="page_trees")
+    user = models.ForeignKey(User)
     period = models.FloatField()  # Amount of time between successive playbacks, in seconds
 
 
@@ -84,16 +85,16 @@ class Tag(ExtendedModel):
     show_content = models.BooleanField(default=True)
 
 
-class ActionTree(ExtendedModel):
+class Page(ExtendedModel):
 
     """
-    This model represents a tree of actions to take on a single web page.
-    During playback, pages themselves are traversed in a tree-like structure, so this model is self-referential.
-    Each action in the ActionTree is represented by an Action object, which is 1:M with ActionTree.
+    This model represents a web page.
+    During playback of a script, Pages are traversed in a tree-like structure, so this model is self-referential.
+    Each action in the Page is represented by an Action object, which is 1:M with Page.
     """
 
-    page_tree = models.ForeignKey(PageTree, related_name="action_trees")
-    previous_page = models.ForeignKey('self', null=True, blank=True, related_name="next_pages")
+    script = models.ForeignKey(Script)
+    parent = models.ForeignKey('self', null=True, blank=True, related_name="children")
     url = models.URLField(max_length=2048)
 
     @property
@@ -113,15 +114,16 @@ class ActionTree(ExtendedModel):
         return self._webdriver
 
     @property
-    def page(self):
+    def page_source(self):
         """
         Retrieves the page for this object if one does not already exist
         """
 
-        if not hasattr(self, '_page'):
-            self._page = Page(self.webdriver.page_source, 'html.parser')
+        if not hasattr(self, '_page_source'):
+            only_allowed_tags = SoupStrainer([tag.name for tag in Tag.objects.all()])
+            self._page_source = PageSource(self.webdriver.page_source, 'html.parser', parse_only=only_allowed_tags)
 
-        return self._page
+        return self._page_source
 
 
 class Action(ExtendedModel):
@@ -132,8 +134,8 @@ class Action(ExtendedModel):
     Possible Action types are limited to a subset of automatable actions supported by the selenium Python bindings.
     """
 
-    action_tree = models.ForeignKey(ActionTree, related_name="actions")
-    previous_action = models.ForeignKey('self', null=True, blank=True, related_name="next_actions")
+    page = models.ForeignKey(Page)
+    parent = models.ForeignKey('self', null=True, blank=True, related_name="children")
     function = models.ForeignKey(FunctionDef)
 
     def klass_instance(self):

@@ -4,7 +4,6 @@ from south.db import db
 from south.v2 import DataMigration
 from django.db import models
 
-
 class Migration(DataMigration):
 
     def forwards(self, orm):
@@ -14,9 +13,10 @@ class Migration(DataMigration):
         """
 
         # BASIC TAGS
-        orm.Tag.objects.create(name='html')
-        orm.Tag.objects.create(name='head')
-        orm.Tag.objects.create(name='body')
+        orm.Tag.objects.create(name='html', show_content=False)
+        orm.Tag.objects.create(name='head', show_content=False)
+        orm.Tag.objects.create(name='body', show_content=False)
+        orm.Tag.objects.create(name='frame', show_content=False)
 
         # TEXT TAGS
         orm.Tag.objects.create(name='h1')
@@ -58,9 +58,6 @@ class Migration(DataMigration):
         orm.Tag.objects.create(name='th')
         orm.Tag.objects.create(name='tr')
         orm.Tag.objects.create(name='td')
-
-        # FRAME TAG
-        orm.Tag.objects.create(name='frame')
 
         # FORM TAGS
         orm.Tag.objects.create(name='form')
@@ -115,12 +112,12 @@ class Migration(DataMigration):
         },
         u'frontend.action': {
             'Meta': {'object_name': 'Action'},
-            'action_tree': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'actions'", 'to': u"orm['frontend.ActionTree']"}),
             'created_at': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'function': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['scraper.FunctionDef']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'db_index': 'True'}),
-            'previous_action': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'next_actions'", 'null': 'True', 'to': u"orm['frontend.Action']"}),
+            'page': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['frontend.Page']"}),
+            'parent': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'children'", 'null': 'True', 'to': u"orm['frontend.Action']"}),
             'updated_at': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'})
         },
         u'frontend.actionarg': {
@@ -142,30 +139,31 @@ class Migration(DataMigration):
             'updated_at': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'value': ('django.db.models.fields.CharField', [], {'max_length': '2048'})
         },
-        u'frontend.actiontree': {
-            'Meta': {'object_name': 'ActionTree'},
+        u'frontend.page': {
+            'Meta': {'object_name': 'Page'},
             'created_at': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'db_index': 'True'}),
-            'page_tree': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'action_trees'", 'to': u"orm['frontend.PageTree']"}),
-            'previous_page': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'next_pages'", 'null': 'True', 'to': u"orm['frontend.ActionTree']"}),
+            'parent': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'children'", 'null': 'True', 'to': u"orm['frontend.Page']"}),
+            'script': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['frontend.Script']"}),
             'updated_at': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'url': ('django.db.models.fields.URLField', [], {'max_length': '2048'})
         },
-        u'frontend.pagetree': {
-            'Meta': {'object_name': 'PageTree'},
+        u'frontend.script': {
+            'Meta': {'object_name': 'Script'},
             'created_at': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'db_index': 'True'}),
             'period': ('django.db.models.fields.FloatField', [], {}),
             'updated_at': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'page_trees'", 'to': u"orm['auth.User']"})
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']"})
         },
         u'frontend.tag': {
             'Meta': {'object_name': 'Tag'},
             'created_at': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'db_index': 'True'}),
+            'show_content': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'updated_at': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'})
         },
         u'scraper.argdef': {
