@@ -1,0 +1,13 @@
+{
+  "name": "atmatr",
+  "description": "Frontend for The Automator",
+  "version": "0.0.1",
+  "homepage": "https://github.com/galarant/atmatr",
+  "dependencies": {
+    "grunt": "0.4.x",
+    "d3": "~3.4.8"
+  },
+  "engines": {
+    "node": ">= 0.10.0"
+  }
+}

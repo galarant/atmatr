@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 
 import hashlib
+import urllib
+import json
 
 #====== DJANGO IMPORTS ======
 from django.conf import settings
@@ -103,7 +105,7 @@ class DeactivationView(RedirectView):
     permanent = False
     pattern_name = 'welcome'
 
-    def get(self, request, **kwargs):
+    def get(self, request, *args, **kwargs):
         code = request.GET.get('code')
         if code:
             # this is really stupid but I don't want to extend the User model right now
@@ -112,55 +114,60 @@ class DeactivationView(RedirectView):
                 if user_code == code:
                     user.is_active = False
                     user.save()
-        return super(DeactivationView, self).get(request, **kwargs)
+        return super(DeactivationView, self).get(request, *args, **kwargs)
 
 
-class IndexView(AuthenticatedView, FormView):
+class IndexView(FormView, AuthenticatedView):
 
     """
-    Starts the user experience.
-    This logic will probably be moved somewhere else once the project becomes less linear
+    Starts the user experience by prompting for an initial URL
     """
 
     template_name = 'index.html'
     form_class = IndexForm
     success_url = '/'
 
-    def post(self, request, **kwargs):
-        """
-        For now, this method just handles the initial url request from the user.
-        """
-
-        # TODO: We should definitely move this logic somewhere else very soon, but right here is fine for now
-        initial_script = Script.objects.create(user=request.user,
-                                               period=0)
-
-        initial_page = Page.objects.create(script=initial_script,
-                                           parent=None,
-                                           url=request.POST['starting_page'])
-
-        from pprint import pformat
-        print """
-              ========= SCRIPT ======
-              {0}
-
-              ========= PAGE ========
-              {1}
-
-              === PAGE.PAGE_SOURCE.JSON ====
-              {2}
-
-              """.format(pformat(initial_script.__dict__),
-                         pformat(initial_page.__dict__),
-                         pformat(initial_page.page_source.json),
-                         )
-
-        return super(IndexView, self).post(request, **kwargs)
-
     def form_valid(self, form):
         """
-        Doesn't really do much right now.
-        In the future it will scrape the initial URL and redirect to the main experience.
+        Redirect to the script-creation experience
         """
 
-        return super(IndexView, self).form_valid(form)
+        return redirect('script', starting_url=urllib.quote(self.request.POST.get('starting_url')))
+
+
+class ScriptView(TemplateView, AuthenticatedView):
+
+    """
+    Leads the user through an experiece that creates a Script for offline automation
+    """
+
+    template_name = 'script.html'
+
+    def get(self, request, *args, **kwargs):
+        """
+        This should only be called once, at the beginning of the Script creation process.
+        We are redirected here from IndexView with a starting_url.
+        """
+
+        if not kwargs.get('starting_url'):
+            # We do not belong here if we don't have a starting URL. Send the user back to IndexView
+            redirect('index')
+
+        # Otherwise we initialize a new Script model for the user, and start the script-creation experience
+        new_script = Script.objects.create(user=self.request.user,
+                                           period=0)
+
+        self.page = Page.objects.create(script=new_script,
+                                        parent=None,
+                                        url=urllib.unquote(kwargs['starting_url']))
+        return super(ScriptView, self).get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        """
+        Sets the context for the template.
+        This template renders an interactive treemap of the requested page
+        """
+
+        context = super(ScriptView, self).get_context_data(**kwargs)
+        context['tree'] = json.dumps(self.page.tree)
+        return context

@@ -1,4 +1,4 @@
-import json as python_json
+from decimal import Decimal
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -15,55 +15,14 @@ from ..scraper.models import(
     KwargDef,
 )
 
-from bs4 import(
-    BeautifulSoup,
-    SoupStrainer,
-)
-
-from bs4.element import Tag as bs4_Tag
-
 from selenium import webdriver
 
+from bs4 import BeautifulSoup
 
-# SUPPORT CLASSES
-
-class PageSource(BeautifulSoup):
-
-    """
-    A BeautifulSoup child class that adds a custom JSON serializer
-    """
-
-    @property
-    def json(self):
-        """
-        Serializes the soup into a JSON object with only the attributes that are important for our app
-        """
-
-        def dictify_tag(tag):
-            """
-            Turns a tag into a dict, keeping only the attributes we are interested in
-            Recursively adds the tag's children as well
-            """
-            ALLOWED_TAGS = [t.name for t in Tag.objects.all()]
-            SHOW_CONTENT = [t.name for t in Tag.objects.filter(show_content=True)]
-
-            return {'name': tag.name,
-                    'namespace': tag.namespace,
-                    'attrs': tag.attrs,
-                    'contents': str(tag.contents) if tag.name in SHOW_CONTENT else None,
-                    'children': [dictify_tag(child) for child in tag.children
-                                 if type(child) == bs4_Tag and child.name in ALLOWED_TAGS]}
-
-        if not getattr(self, '_json'):
-            if not self.find('html'):
-                raise AttributeError("Cannot serialize: missing html tag")
-            tag_as_json = python_json.dumps(dictify_tag(self.find('html')))
-            self._json = tag_as_json
-
-        return self._json
-
+from bs4.element import Tag as bs4_Tag, NavigableString
 
 # APPLICATION MODELS
+
 
 class Script(ExtendedModel):
 
@@ -99,9 +58,21 @@ class Page(ExtendedModel):
     Each action in the Page is represented by an Action object, which is 1:M with Page.
     """
 
+    TREEMAP_SIZE = (1200, 620)
+    USABLE_TAGS = [tag.name for tag in Tag.objects.all()]
+
     script = models.ForeignKey(Script)
     parent = models.ForeignKey('self', null=True, blank=True, related_name="children")
     url = models.URLField(max_length=2048)
+
+    def __del__(self):
+        """
+        On garbage collection, kill the webdriver if it exists
+        This is easy but kind of precarious so in the future we might want implement it with __enter__ and __exit__ instead
+        """
+
+        if hasattr(self, '_webdriver'):
+            self._webdriver.quit()
 
     @property
     def webdriver(self):
@@ -116,35 +87,57 @@ class Page(ExtendedModel):
         if not hasattr(self, '_webdriver'):
             self._webdriver = webdriver.PhantomJS()
             self._webdriver.get(self.url)
+            self._webdriver.maximize_window()
 
         return self._webdriver
 
     @property
-    def source(self):
+    def size(self):
         """
-        Retrieves the page for this object if one does not already exist
+        Returns the size of the page as a tuple of (width, height)
         """
 
-        if not hasattr(self, '_source'):
-            self._source = PageSource(self.webdriver.page_source, 'lxml')
+        if not hasattr(self, '_size'):
+            page_width = self.webdriver.execute_script('return document.getElementsByTagName(\'body\')[0].clientWidth')
+            page_height = self.webdriver.execute_script('return document.getElementsByTagName(\'body\')[0].clientHeight')
+            self._size = (page_width, page_height)
 
-        return self._source
+        return self._size
 
     @property
-    def segments(self):
+    def soup(self):
         """
-        Returns a list of sub-trees from the source
+        Returns a BeautifulSoup representation of the current DOM
         """
 
-        if not hasattr(self, '_segments'):
-            self._segments = []
-            for s_root_tag in Tag.objects.filter(category='s_format_root'):
-                # TODO: we should add a smarter traversal than find_all
-                # since we want segments to be non-overlapping
-                structured_segments = [tag.extract() for tag in self.source.find_all(s_root_tag.name)]
-                self._segments.extend(structured_segments)
+        if not hasattr(self, '_soup'):
+            self._soup = BeautifulSoup(self.webdriver.page_source)
 
-        return self._segments
+        return self._soup
+
+    @property
+    def tree(self):
+        """
+        Returns a dict for use with http://bost.ocks.org/mike/treemap/
+        """
+
+        def _add_soup_node_to_tree(node):
+            """
+            Recursively builds the tree dict
+            """
+            if hasattr(node, 'children'):
+                return {'name': node.name, 'children': [_add_soup_node_to_tree(child) for child in node.children if
+                                                        (type(child) == bs4_Tag and child.name in self.USABLE_TAGS) or
+                                                        (type(child) == NavigableString and child.strip())]}
+            else:
+                node_contents = unicode(node.strip())
+                return {'name': node_contents, 'value': len(node_contents)}
+
+        if not hasattr(self, '_tree'):
+            self._tree = {}
+            root_node = self.soup.find('html')
+            self._tree = _add_soup_node_to_tree(root_node)
+        return self._tree
 
 
 class Action(ExtendedModel):

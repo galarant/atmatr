@@ -2,4 +2,4 @@ from django import forms
 
 
 class IndexForm(forms.Form):
-    starting_page = forms.URLField(label="NOW YOU MUST GIVE ME A STARTING URL:")
+    starting_url = forms.URLField(label="PLEASE GIVE ME A URL TO START WITH:")
