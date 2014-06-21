@@ -1,0 +1,16 @@
+[run]
+branch = True
+source = atmatr/
+omit =
+	tests/*
+
+[report]
+exclude_lines =
+	pragma: no cover
+	def __repr__
+	def __str__
+	def __unicode__
+precision = 2
+show_missing = True
+title = Atmatr Coverage Report
+
