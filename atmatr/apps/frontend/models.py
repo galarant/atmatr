@@ -82,7 +82,13 @@ class Tag(ExtendedModel):
     This model represents an HTML tag type
     http://www.w3schools.com/tags/
     """
-    show_content = models.BooleanField(default=True)
+    TAG_CATEGORIES = (('basic', 'basic'),
+                      ('s_format', 's_format'),
+                      ('s_format_root', 's_format_root'),
+                      ('u_format', 'u_format'),
+                      ('content', 'content'),
+                      ('interactable', 'interactable'),)
+    category = models.CharField(max_length=50, choices=TAG_CATEGORIES)
 
 
 class Page(ExtendedModel):
@@ -114,16 +120,31 @@ class Page(ExtendedModel):
         return self._webdriver
 
     @property
-    def page_source(self):
+    def source(self):
         """
         Retrieves the page for this object if one does not already exist
         """
 
-        if not hasattr(self, '_page_source'):
-            only_allowed_tags = SoupStrainer([tag.name for tag in Tag.objects.all()])
-            self._page_source = PageSource(self.webdriver.page_source, 'html.parser', parse_only=only_allowed_tags)
+        if not hasattr(self, '_source'):
+            self._source = PageSource(self.webdriver.page_source, 'lxml')
 
-        return self._page_source
+        return self._source
+
+    @property
+    def segments(self):
+        """
+        Returns a list of sub-trees from the source
+        """
+
+        if not hasattr(self, '_segments'):
+            self._segments = []
+            for s_root_tag in Tag.objects.filter(category='s_format_root'):
+                # TODO: we should add a smarter traversal than find_all
+                # since we want segments to be non-overlapping
+                structured_segments = [tag.extract() for tag in self.source.find_all(s_root_tag.name)]
+                self._segments.extend(structured_segments)
+
+        return self._segments
 
 
 class Action(ExtendedModel):

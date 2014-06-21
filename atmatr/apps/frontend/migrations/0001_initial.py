@@ -25,7 +25,7 @@ class Migration(SchemaMigration):
             ('created_at', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
             ('updated_at', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
             ('name', self.gf('django.db.models.fields.CharField')(max_length=255, db_index=True)),
-            ('show_content', self.gf('django.db.models.fields.BooleanField')(default=True)),
+            ('category', self.gf('django.db.models.fields.CharField')(max_length=50)),
         ))
         db.send_create_signal(u'frontend', ['Tag'])
 
@@ -182,10 +182,10 @@ class Migration(SchemaMigration):
         },
         u'frontend.tag': {
             'Meta': {'object_name': 'Tag'},
+            'category': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
             'created_at': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'db_index': 'True'}),
-            'show_content': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'updated_at': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'})
         },
         u'scraper.argdef': {
