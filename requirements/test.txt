@@ -4,3 +4,4 @@ django-debug-toolbar
 pytest-config==0.0.8
 vcrpy==1.0.2
 mock==1.0.1
+model_mommy==1.2

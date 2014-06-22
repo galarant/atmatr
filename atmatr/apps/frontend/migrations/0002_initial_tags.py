@@ -13,60 +13,60 @@ class Migration(DataMigration):
         """
 
         # BASIC TAGS
-        orm.Tag.objects.create(name='html', show_content=False)
-        orm.Tag.objects.create(name='head', show_content=False)
-        orm.Tag.objects.create(name='body', show_content=False)
-        orm.Tag.objects.create(name='frame', show_content=False)
+        orm.Tag.objects.create(name='html', category='basic')
+        orm.Tag.objects.create(name='head', category='basic')
+        orm.Tag.objects.create(name='body', category='basic')
+        orm.Tag.objects.create(name='frame', category='basic')
 
         # TEXT TAGS
-        orm.Tag.objects.create(name='h1')
-        orm.Tag.objects.create(name='h2')
-        orm.Tag.objects.create(name='h3')
-        orm.Tag.objects.create(name='h4')
-        orm.Tag.objects.create(name='h5')
-        orm.Tag.objects.create(name='h6')
-        orm.Tag.objects.create(name='b')
-        orm.Tag.objects.create(name='i')
-        orm.Tag.objects.create(name='u')
-        orm.Tag.objects.create(name='tt')
-        orm.Tag.objects.create(name='pre')
-        orm.Tag.objects.create(name='cite')
-        orm.Tag.objects.create(name='em')
-        orm.Tag.objects.create(name='strong')
-        orm.Tag.objects.create(name='font')
-        orm.Tag.objects.create(name='strike')
-        orm.Tag.objects.create(name='sup')
-        orm.Tag.objects.create(name='sub')
+        orm.Tag.objects.create(name='h1', category='content')
+        orm.Tag.objects.create(name='h2', category='content')
+        orm.Tag.objects.create(name='h3', category='content')
+        orm.Tag.objects.create(name='h4', category='content')
+        orm.Tag.objects.create(name='h5', category='content')
+        orm.Tag.objects.create(name='h6', category='content')
+        orm.Tag.objects.create(name='b', category='content')
+        orm.Tag.objects.create(name='i', category='content')
+        orm.Tag.objects.create(name='u', category='content')
+        orm.Tag.objects.create(name='tt', category='content')
+        orm.Tag.objects.create(name='pre', category='content')
+        orm.Tag.objects.create(name='cite', category='content')
+        orm.Tag.objects.create(name='em', category='content')
+        orm.Tag.objects.create(name='strong', category='content')
+        orm.Tag.objects.create(name='font', category='content')
+        orm.Tag.objects.create(name='strike', category='content')
+        orm.Tag.objects.create(name='sup', category='content')
+        orm.Tag.objects.create(name='sub', category='content')
+        orm.Tag.objects.create(name='a', category='content')
+        orm.Tag.objects.create(name='img', category='content')
 
-        # LINK TAG
-        orm.Tag.objects.create(name='a')
+        # UNSTRUCTURED FORMATTING TAGS
+        orm.Tag.objects.create(name='p', category='u_format')
+        orm.Tag.objects.create(name='blockquote', category='u_format')
+        orm.Tag.objects.create(name='div', category='u_format')
 
-        # FORMATTING TAGS
-        orm.Tag.objects.create(name='p')
-        orm.Tag.objects.create(name='blockquote')
-        orm.Tag.objects.create(name='dl')
-        orm.Tag.objects.create(name='dt')
-        orm.Tag.objects.create(name='dd')
-        orm.Tag.objects.create(name='ol')
-        orm.Tag.objects.create(name='ul')
-        orm.Tag.objects.create(name='li')
-        orm.Tag.objects.create(name='div')
-        orm.Tag.objects.create(name='img')
+        # STRUCTURED FORMATTING TAG ROOTS
+        orm.Tag.objects.create(name='dl', category='s_format_root')
+        orm.Tag.objects.create(name='ol', category='s_format_root')
+        orm.Tag.objects.create(name='ul', category='s_format_root')
+        orm.Tag.objects.create(name='table', category='s_format_root')
+        orm.Tag.objects.create(name='form', category='s_format_root')
 
-        # TABLE TAGS
-        orm.Tag.objects.create(name='table')
-        orm.Tag.objects.create(name='th')
-        orm.Tag.objects.create(name='tr')
-        orm.Tag.objects.create(name='td')
+        # STRUCTURED FORMATTING TAG CHILDREN
+        orm.Tag.objects.create(name='dt', category='s_format')
+        orm.Tag.objects.create(name='dd', category='s_format')
+        orm.Tag.objects.create(name='li', category='s_format')
+        orm.Tag.objects.create(name='th', category='s_format')
+        orm.Tag.objects.create(name='tr', category='s_format')
+        orm.Tag.objects.create(name='td', category='s_format')
 
-        # FORM TAGS
-        orm.Tag.objects.create(name='form')
-        orm.Tag.objects.create(name='select')
-        orm.Tag.objects.create(name='option')
-        orm.Tag.objects.create(name='textarea')
-        orm.Tag.objects.create(name='input')
-        orm.Tag.objects.create(name='button')
-        orm.Tag.objects.create(name='label')
+        # INTERACTABLE TAGS
+        orm.Tag.objects.create(name='select', category='interactable')
+        orm.Tag.objects.create(name='option', category='interactable')
+        orm.Tag.objects.create(name='textarea', category='interactable')
+        orm.Tag.objects.create(name='input', category='interactable')
+        orm.Tag.objects.create(name='button', category='interactable')
+        orm.Tag.objects.create(name='label', category='interactable')
 
     def backwards(self, orm):
         all_tags = orm.Tag.objects.all()
@@ -160,10 +160,10 @@ class Migration(DataMigration):
         },
         u'frontend.tag': {
             'Meta': {'object_name': 'Tag'},
+            'category': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
             'created_at': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'db_index': 'True'}),
-            'show_content': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'updated_at': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'})
         },
         u'scraper.argdef': {
