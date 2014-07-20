@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans %}
+<h4 class="explainer">
+    THE OBJECT BELOW IS AN INTERACTIVE TREEMAP OF YOUR REQUESTED PAGE.</br></br>
+    YOU CAN CLICK AROUND ON THE TREEMAP AND DEFINE WHICH AUTOMATED ACTIONS YOU WOULD LIKE ME TO TAKE ON THIS PAGE.
+</h4>
+{% endblocktrans %}
+<p id="chart"></p>
+<script>
+    var root = {{ tree|safe }}
+</script>
+<script src="{{STATIC_URL}}javascript/node_modules/d3/d3.min.js"></script>
+<script src="{{STATIC_URL}}javascript/visualization/treemap.js"></script>
+{% endblock %}

@@ -24,6 +24,28 @@ def get_function_closure(fn):
         return closure
 
 
+def profile(func):
+    """
+    Decorator that profiles a function with cProfile and produces output
+    """
+    def wrapper(*args, **kwargs):
+        import cProfile
+        import pstats
+        import StringIO
+        pr = cProfile.Profile()
+        pr.enable()
+        retval = func(*args, **kwargs)
+        pr.disable()
+        s = StringIO.StringIO()
+        sortby = 'cumulative'
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        ps.print_stats()
+        print s.getvalue()
+        return retval
+
+    return wrapper
+
+
 class VCRSerializer(object):
 
     """

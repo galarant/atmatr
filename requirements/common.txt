@@ -5,3 +5,5 @@ pytz
 south
 selenium
 beautifulsoup4
+lxml
+svgwrite

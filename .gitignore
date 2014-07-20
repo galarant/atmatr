@@ -50,3 +50,6 @@ atmatr/settings/secret.py
 
 # Media
 media/*
+
+#Node Modules
+node_modules/
