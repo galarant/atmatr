@@ -133,10 +133,26 @@ class Page(ExtendedModel):
                 node_contents = unicode(node.strip())
                 return {'name': node_contents, 'value': len(node_contents)}
 
+        def _trim_empty_nodes(node, parent_node=None, node_index=None):
+            """
+            Recurse through the tree again, and eliminate any empty nodes.
+            This is pretty inefficient
+            Should be addressed in the future by just building the tree so that it doesn't have empty nodes to begin with
+            """
+            children = node.get('children')
+            if children:
+                for (index, child) in enumerate(children):
+                    _trim_empty_nodes(node=child, parent_node=node, node_index=index)
+            elif type(children) is list:
+                # node is not a root node, but also has no children. delete it.
+                del(parent_node['children'][node_index])
+
         if not hasattr(self, '_tree'):
             self._tree = {}
             root_node = self.soup.find('html')
             self._tree = _add_soup_node_to_tree(root_node)
+            _trim_empty_nodes(self._tree)
+
         return self._tree
 
 
