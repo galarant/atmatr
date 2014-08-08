@@ -17,9 +17,25 @@ from ..scraper.models import(
 
 from selenium import webdriver
 
-from bs4 import BeautifulSoup
+# SUPPORT MODELS
 
-from bs4.element import Tag as bs4_Tag, NavigableString
+
+class PageObject(object):
+
+    """
+    Represents a section of the Page that we want to re-render inside The Automator
+    """
+
+    DATA_TAGS = ['dl', 'ol', 'ul', 'table']
+    INTERACTIVE_TAGS = ['form']
+
+    def __init__(self, name, locator, size, content, styles=None):
+
+        self.name = name
+        self.locator = locator
+        self.size = size
+        self.content = content
+        self.styles = styles
 
 # APPLICATION MODELS
 
@@ -105,53 +121,28 @@ class Page(ExtendedModel):
         return self._size
 
     @property
-    def soup(self):
-        """
-        Returns a BeautifulSoup representation of the current DOM
-        """
-
-        if not hasattr(self, '_soup'):
-            self._soup = BeautifulSoup(self.webdriver.page_source)
-
-        return self._soup
-
-    @property
     def tree(self):
         """
         Returns a dict for use with http://bost.ocks.org/mike/treemap/
         """
 
-        def _add_soup_node_to_tree(node):
-            """
-            Recursively builds the tree dict
-            """
-            if hasattr(node, 'children'):
-                return {'name': node.name, 'children': [_add_soup_node_to_tree(child) for child in node.children if
-                                                        (type(child) == bs4_Tag and child.name in self.USABLE_TAGS) or
-                                                        (type(child) == NavigableString and child.strip())]}
-            else:
-                node_contents = unicode(node.strip())
-                return {'name': node_contents, 'value': len(node_contents)}
-
-        def _trim_empty_nodes(node, parent_node=None, node_index=None):
-            """
-            Recurse through the tree again, and eliminate any empty nodes.
-            This is pretty inefficient
-            Should be addressed in the future by just building the tree so that it doesn't have empty nodes to begin with
-            """
-            children = node.get('children')
-            if children:
-                for (index, child) in enumerate(children):
-                    _trim_empty_nodes(node=child, parent_node=node, node_index=index)
-            elif type(children) is list:
-                # node is not a root node, but also has no children. delete it.
-                del(parent_node['children'][node_index])
-
         if not hasattr(self, '_tree'):
-            self._tree = {}
-            root_node = self.soup.find('html')
-            self._tree = _add_soup_node_to_tree(root_node)
-            _trim_empty_nodes(self._tree)
+            self._tree = {'name': self.webdriver.title,
+                          'children': []}
+
+            # this is a little ugly but it will do for now
+            page_objects = []
+            for page_object_tag in PageObject.DATA_TAGS + PageObject.INTERACTIVE_TAGS:
+                web_elements = self.webdriver.find_elements_by_tag_name(page_object_tag)
+                for web_element in web_elements:
+                    size = web_element.size
+                    if size['height'] and size['width']:
+                        page_objects.append(PageObject(name=web_element.tag_name,
+                                                       locator=None,  # for now...
+                                                       content=web_element.get_attribute('innerHTML'),
+                                                       size=size))
+
+            self._tree['children'].extend([{'name': po.name, 'value': po.size['height'] * po.size['width']} for po in page_objects])
 
         return self._tree
 
