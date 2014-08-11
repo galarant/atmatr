@@ -1,3 +1,5 @@
+import os
+import random
 from decimal import Decimal
 
 from django.db import models
@@ -16,26 +18,7 @@ from ..scraper.models import(
 )
 
 from selenium import webdriver
-
-# SUPPORT MODELS
-
-
-class PageObject(object):
-
-    """
-    Represents a section of the Page that we want to re-render inside The Automator
-    """
-
-    DATA_TAGS = ['dl', 'ol', 'ul', 'table']
-    INTERACTIVE_TAGS = ['form']
-
-    def __init__(self, name, locator, size, content, styles=None):
-
-        self.name = name
-        self.locator = locator
-        self.size = size
-        self.content = content
-        self.styles = styles
+from PIL import Image
 
 # APPLICATION MODELS
 
@@ -76,6 +59,7 @@ class Page(ExtendedModel):
 
     TREEMAP_SIZE = (1200, 620)
     USABLE_TAGS = [tag.name for tag in Tag.objects.all()]
+    RANDOM_ALPHA = lambda self: random.choice('abcdefghijklmnopqrstuvwxyz0123456789')
 
     script = models.ForeignKey(Script)
     parent = models.ForeignKey('self', null=True, blank=True, related_name="children")
@@ -89,6 +73,10 @@ class Page(ExtendedModel):
 
         if hasattr(self, '_webdriver'):
             self._webdriver.quit()
+
+        if hasattr(self, '_screenshot'):
+            self._screenshot.close()
+            os.remove(self._screenshot_filename)
 
     @property
     def webdriver(self):
@@ -108,17 +96,18 @@ class Page(ExtendedModel):
         return self._webdriver
 
     @property
-    def size(self):
+    def screenshot(self):
         """
-        Returns the size of the page as a tuple of (width, height)
+        Returns a screenshot of the page as a PIL Image
         """
 
-        if not hasattr(self, '_size'):
-            page_width = self.webdriver.execute_script('return document.getElementsByTagName(\'body\')[0].clientWidth')
-            page_height = self.webdriver.execute_script('return document.getElementsByTagName(\'body\')[0].clientHeight')
-            self._size = (page_width, page_height)
+        if not hasattr(self, '_screenshot'):
+            filename = '/tmp/{0}.png'.format(''.join(self.RANDOM_ALPHA() for i in range(5)))
+            self.webdriver.save_screenshot(filename)
+            self._screenshot_filename = filename
+            self._screenshot = Image.open(filename)
 
-        return self._size
+        return self._screenshot
 
     @property
     def tree(self):
@@ -126,23 +115,31 @@ class Page(ExtendedModel):
         Returns a dict for use with http://bost.ocks.org/mike/treemap/
         """
 
+        DATA_TAGS = ['dl', 'ol', 'ul', 'table']
+        INTERACTIVE_TAGS = ['form']
+
         if not hasattr(self, '_tree'):
             self._tree = {'name': self.webdriver.title,
                           'children': []}
 
             # this is a little ugly but it will do for now
-            page_objects = []
-            for page_object_tag in PageObject.DATA_TAGS + PageObject.INTERACTIVE_TAGS:
+            for page_object_tag in DATA_TAGS + INTERACTIVE_TAGS:
                 web_elements = self.webdriver.find_elements_by_tag_name(page_object_tag)
                 for web_element in web_elements:
                     size = web_element.size
-                    if size['height'] and size['width']:
-                        page_objects.append(PageObject(name=web_element.tag_name,
-                                                       locator=None,  # for now...
-                                                       content=web_element.get_attribute('innerHTML'),
-                                                       size=size))
-
-            self._tree['children'].extend([{'name': po.name, 'value': po.size['height'] * po.size['width']} for po in page_objects])
+                    area = size.get('height', 0) * size.get('width', 0)
+                    if area:
+                        location = web_element.location
+                        crop_box = (location['x'],
+                                    location['y'],
+                                    location['x'] + size['width'],
+                                    location['y'] + size['height'])
+                        filename = '/tmp/{0}.png'.format(''.join(self.RANDOM_ALPHA() for i in range(5)))
+                        screenshot = self.screenshot.crop(crop_box).save(filename)
+                        os.system('open %s' % filename)
+                        self._tree['children'].append({'name': web_element.tag_name,
+                                                       'value': area,
+                                                       'screenshot': filename})
 
         return self._tree
 

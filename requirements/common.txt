@@ -7,3 +7,4 @@ selenium
 beautifulsoup4
 lxml
 svgwrite
+Pillow
