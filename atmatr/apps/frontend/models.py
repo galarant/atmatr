@@ -1,6 +1,7 @@
 import os
 import random
 from decimal import Decimal
+from StringIO import StringIO
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -19,6 +20,7 @@ from ..scraper.models import(
 
 from selenium import webdriver
 from PIL import Image
+from subprocess import Popen, PIPE, STDOUT
 
 # APPLICATION MODELS
 
@@ -59,7 +61,6 @@ class Page(ExtendedModel):
 
     TREEMAP_SIZE = (1200, 620)
     USABLE_TAGS = [tag.name for tag in Tag.objects.all()]
-    RANDOM_ALPHA = lambda self: random.choice('abcdefghijklmnopqrstuvwxyz0123456789')
 
     script = models.ForeignKey(Script)
     parent = models.ForeignKey('self', null=True, blank=True, related_name="children")
@@ -73,10 +74,6 @@ class Page(ExtendedModel):
 
         if hasattr(self, '_webdriver'):
             self._webdriver.quit()
-
-        if hasattr(self, '_screenshot'):
-            self._screenshot.close()
-            os.remove(self._screenshot_filename)
 
     @property
     def webdriver(self):
@@ -102,10 +99,12 @@ class Page(ExtendedModel):
         """
 
         if not hasattr(self, '_screenshot'):
-            filename = '/tmp/{0}.png'.format(''.join(self.RANDOM_ALPHA() for i in range(5)))
-            self.webdriver.save_screenshot(filename)
-            self._screenshot_filename = filename
-            self._screenshot = Image.open(filename)
+            img_bin = StringIO(self.webdriver.get_screenshot_as_png())
+            self._screenshot = Image.open(img_bin)
+            # strip alpha channel if it exists, to prevent PIL mode errors on save
+            if len(self._screenshot.split()) == 4:
+                r, g, b, a = self._screenshot.split()
+                self._screenshot = Image.merge("RGB", (r, g, b))
 
         return self._screenshot
 
@@ -117,6 +116,19 @@ class Page(ExtendedModel):
 
         DATA_TAGS = ['dl', 'ol', 'ul', 'table']
         INTERACTIVE_TAGS = ['form']
+
+        def _img_to_svg(img):
+            """
+            Converts a PIL image to an SVG image using in-memory operations only
+            """
+
+            img_bin = StringIO()
+            img.save(img_bin, 'bmp')
+            process = Popen(['mkbitmap', '-'], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            mkbitmap_out = process.communicate(input=img_bin.getvalue())[0]
+            process = Popen(['potrace', '-s', '-'], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            svg = process.communicate(input=mkbitmap_out)[0]
+            return svg
 
         if not hasattr(self, '_tree'):
             self._tree = {'name': self.webdriver.title,
@@ -134,12 +146,11 @@ class Page(ExtendedModel):
                                     location['y'],
                                     location['x'] + size['width'],
                                     location['y'] + size['height'])
-                        filename = '/tmp/{0}.png'.format(''.join(self.RANDOM_ALPHA() for i in range(5)))
-                        screenshot = self.screenshot.crop(crop_box).save(filename)
-                        os.system('open %s' % filename)
+                        # also need to treat the crop as a tempfile until we get pypotrace working
+                        screencrop = self.screenshot.crop(crop_box)
                         self._tree['children'].append({'name': web_element.tag_name,
                                                        'value': area,
-                                                       'screenshot': filename})
+                                                       'svg': _img_to_svg(screencrop)})
 
         return self._tree
 
