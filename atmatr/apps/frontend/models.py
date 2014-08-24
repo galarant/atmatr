@@ -1,4 +1,7 @@
+import os
+import random
 from decimal import Decimal
+from StringIO import StringIO
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -16,26 +19,8 @@ from ..scraper.models import(
 )
 
 from selenium import webdriver
-
-# SUPPORT MODELS
-
-
-class PageObject(object):
-
-    """
-    Represents a section of the Page that we want to re-render inside The Automator
-    """
-
-    DATA_TAGS = ['dl', 'ol', 'ul', 'table']
-    INTERACTIVE_TAGS = ['form']
-
-    def __init__(self, name, locator, size, content, styles=None):
-
-        self.name = name
-        self.locator = locator
-        self.size = size
-        self.content = content
-        self.styles = styles
+from PIL import Image
+from subprocess import Popen, PIPE, STDOUT
 
 # APPLICATION MODELS
 
@@ -108,17 +93,20 @@ class Page(ExtendedModel):
         return self._webdriver
 
     @property
-    def size(self):
+    def screenshot(self):
         """
-        Returns the size of the page as a tuple of (width, height)
+        Returns a screenshot of the page as a PIL Image
         """
 
-        if not hasattr(self, '_size'):
-            page_width = self.webdriver.execute_script('return document.getElementsByTagName(\'body\')[0].clientWidth')
-            page_height = self.webdriver.execute_script('return document.getElementsByTagName(\'body\')[0].clientHeight')
-            self._size = (page_width, page_height)
+        if not hasattr(self, '_screenshot'):
+            img_bin = StringIO(self.webdriver.get_screenshot_as_png())
+            self._screenshot = Image.open(img_bin)
+            # strip alpha channel if it exists, to prevent PIL mode errors on save
+            if len(self._screenshot.split()) == 4:
+                r, g, b, a = self._screenshot.split()
+                self._screenshot = Image.merge("RGB", (r, g, b))
 
-        return self._size
+        return self._screenshot
 
     @property
     def tree(self):
@@ -126,23 +114,43 @@ class Page(ExtendedModel):
         Returns a dict for use with http://bost.ocks.org/mike/treemap/
         """
 
+        DATA_TAGS = ['dl', 'ol', 'ul', 'table']
+        INTERACTIVE_TAGS = ['form']
+
+        def _img_to_svg(img):
+            """
+            Converts a PIL image to an SVG image using in-memory operations only
+            """
+
+            img_bin = StringIO()
+            img.save(img_bin, 'bmp')
+            process = Popen(['mkbitmap', '-'], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            mkbitmap_out = process.communicate(input=img_bin.getvalue())[0]
+            process = Popen(['potrace', '-s', '-'], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            svg = process.communicate(input=mkbitmap_out)[0]
+            return svg
+
         if not hasattr(self, '_tree'):
             self._tree = {'name': self.webdriver.title,
                           'children': []}
 
             # this is a little ugly but it will do for now
-            page_objects = []
-            for page_object_tag in PageObject.DATA_TAGS + PageObject.INTERACTIVE_TAGS:
+            for page_object_tag in DATA_TAGS + INTERACTIVE_TAGS:
                 web_elements = self.webdriver.find_elements_by_tag_name(page_object_tag)
                 for web_element in web_elements:
                     size = web_element.size
-                    if size['height'] and size['width']:
-                        page_objects.append(PageObject(name=web_element.tag_name,
-                                                       locator=None,  # for now...
-                                                       content=web_element.get_attribute('innerHTML'),
-                                                       size=size))
-
-            self._tree['children'].extend([{'name': po.name, 'value': po.size['height'] * po.size['width']} for po in page_objects])
+                    area = size.get('height', 0) * size.get('width', 0)
+                    if area:
+                        location = web_element.location
+                        crop_box = (location['x'],
+                                    location['y'],
+                                    location['x'] + size['width'],
+                                    location['y'] + size['height'])
+                        # also need to treat the crop as a tempfile until we get pypotrace working
+                        screencrop = self.screenshot.crop(crop_box)
+                        self._tree['children'].append({'name': web_element.tag_name,
+                                                       'value': area,
+                                                       'svg': _img_to_svg(screencrop)})
 
         return self._tree
 

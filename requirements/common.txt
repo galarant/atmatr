@@ -7,3 +7,7 @@ selenium
 beautifulsoup4
 lxml
 svgwrite
+Pillow
+cython
+numpy
+pypotrace
