@@ -169,7 +169,5 @@ class ScriptView(TemplateView, AuthenticatedView):
         """
 
         context = super(ScriptView, self).get_context_data(**kwargs)
-        from pprint import pprint
-        pprint(self.page.tree)
         context['tree'] = json.dumps(self.page.tree)
         return context
