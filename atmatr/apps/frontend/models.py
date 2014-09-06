@@ -122,6 +122,15 @@ class Page(ExtendedModel):
             Converts a PIL image to an SVG image using in-memory operations only
             """
 
+            # this is some test code to display page snippets and their SVG equivalients.
+            # please leave it in for now
+            """
+            from tempfile import NamedTemporaryFile
+            tmp = NamedTemporaryFile()
+            img.save(tmp.name + '.bmp', 'bmp')
+            os.system('open {0}.bmp'.format(tmp.name))
+            """
+
             img_bin = StringIO()
             img.save(img_bin, 'bmp')
             process = Popen(['mkbitmap', '-'], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
@@ -148,9 +157,10 @@ class Page(ExtendedModel):
                                     location['y'] + size['height'])
                         # also need to treat the crop as a tempfile until we get pypotrace working
                         screencrop = self.screenshot.crop(crop_box)
+                        svg = _img_to_svg(screencrop)
                         self._tree['children'].append({'name': web_element.tag_name,
                                                        'value': area,
-                                                       'svg': _img_to_svg(screencrop)})
+                                                       'svg': svg})
 
         return self._tree
 
