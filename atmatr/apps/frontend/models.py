@@ -62,7 +62,6 @@ class Page(ExtendedModel):
     """
 
     TREEMAP_SIZE = (1200, 620)
-    USABLE_TAGS = [tag.name for tag in Tag.objects.all()]
 
     script = models.ForeignKey(Script)
     parent = models.ForeignKey('self', null=True, blank=True, related_name="children")
