@@ -45,7 +45,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 # Static files
 STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
 STATICFILES_DIRS = (BASE_DIR + 'public/static/',)
+MEDIA_ROOT = BASE_DIR + 'public/media/'
 LOGIN_URL = '/welcome/'
 LOGIN_REDIRECT_URL = 'index'
 

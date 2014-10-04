@@ -1,8 +1,10 @@
 import os
+import uuid
 import random
 from decimal import Decimal
 from StringIO import StringIO
 
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
 from atmatr.models import (
@@ -101,10 +103,6 @@ class Page(ExtendedModel):
         if not hasattr(self, '_screenshot'):
             img_bin = StringIO(self.webdriver.get_screenshot_as_png())
             self._screenshot = Image.open(img_bin)
-            # strip alpha channel if it exists, to prevent PIL mode errors on save
-            if len(self._screenshot.split()) == 4:
-                r, g, b, a = self._screenshot.split()
-                self._screenshot = Image.merge("RGB", (r, g, b))
 
         return self._screenshot
 
@@ -116,28 +114,6 @@ class Page(ExtendedModel):
 
         DATA_TAGS = ['dl', 'ol', 'ul', 'table']
         INTERACTIVE_TAGS = ['form']
-
-        def _img_to_svg(img):
-            """
-            Converts a PIL image to an SVG image using in-memory operations only
-            """
-
-            # this is some test code to display page snippets and their SVG equivalients.
-            # please leave it in for now
-            """
-            from tempfile import NamedTemporaryFile
-            tmp = NamedTemporaryFile()
-            img.save(tmp.name + '.bmp', 'bmp')
-            os.system('open {0}.bmp'.format(tmp.name))
-            """
-
-            img_bin = StringIO()
-            img.save(img_bin, 'bmp')
-            process = Popen(['mkbitmap', '-'], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
-            mkbitmap_out = process.communicate(input=img_bin.getvalue())[0]
-            process = Popen(['potrace', '-s', '-'], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
-            svg = process.communicate(input=mkbitmap_out)[0]
-            return svg
 
         if not hasattr(self, '_tree'):
             self._tree = {'name': self.webdriver.title,
@@ -156,11 +132,11 @@ class Page(ExtendedModel):
                                     location['x'] + size['width'],
                                     location['y'] + size['height'])
                         # also need to treat the crop as a tempfile until we get pypotrace working
-                        screencrop = self.screenshot.crop(crop_box)
-                        svg = _img_to_svg(screencrop)
+                        screencrop_filename = str(uuid.uuid4()) + '.png'
+                        self.screenshot.crop(crop_box).save(settings.MEDIA_ROOT + 'images/treemap/' + screencrop_filename)
                         self._tree['children'].append({'name': web_element.tag_name,
                                                        'value': area,
-                                                       'svg': svg})
+                                                       'screencrop_url': settings.MEDIA_URL + 'images/treemap/' + screencrop_filename})
 
         return self._tree
 
