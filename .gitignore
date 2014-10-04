@@ -49,7 +49,7 @@ docs/_build/
 atmatr/settings/secret.py
 
 # Media
-media/
+media/treemap/
 
 #Node Modules
 node_modules/
