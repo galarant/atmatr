@@ -139,6 +139,20 @@ class Page(ExtendedModel):
 
         return self._tree
 
+    @property
+    def grouped_elements(self):
+        """
+        Returns dict of element groups (web elements that occur greater than 5 times)
+        The key is the name of the element class
+        Mapped to list of tuple of (location['x'], location['y'], size['width'], size['height']
+        """
+        page_source = self.webdriver.page_source
+        DATA_TAGS = ['dl', 'ol', 'ul', 'table']
+        INTERACTIVE_TAGS = ['form']
+
+        for page_object_tag in DATA_TAGS + INTERACTIVE_TAGS:
+
+
 
 class Action(ExtendedModel):
 
