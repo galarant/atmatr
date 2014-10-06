@@ -61,7 +61,7 @@ class Page(ExtendedModel):
     Each action in the Page is represented by an Action object, which is 1:M with Page.
     """
 
-    TREEMAP_SIZE = (1200, 620)
+    VIEWPORT_SIZE = (1000, 620)
 
     script = models.ForeignKey(Script)
     parent = models.ForeignKey('self', null=True, blank=True, related_name="children")
@@ -94,50 +94,30 @@ class Page(ExtendedModel):
         return self._webdriver
 
     @property
+    def size(self):
+        """
+        Returns the size of the page as a tuple of (width, height)
+        """
+
+        if not hasattr(self, '_size'):
+            page_width = self.webdriver.execute_script('return document.getElementsByTagName(\'body\')[0].clientWidth')
+            page_height = self.webdriver.execute_script('return document.getElementsByTagName(\'body\')[0].clientHeight')
+            self._size = (page_width, page_height)
+
+        return self._size
+
+    @property
     def screenshot(self):
         """
         Returns a screenshot of the page as a PIL Image
         """
 
         if not hasattr(self, '_screenshot'):
-            img_bin = StringIO(self.webdriver.get_screenshot_as_png())
-            self._screenshot = Image.open(img_bin)
+            screenshot_filename = str(uuid.uuid4()) + '.png'
+            self.webdriver.save_screenshot(settings.MEDIA_ROOT + 'images/screenshots/' + screenshot_filename)
+            self._screenshot = screenshot_filename
 
         return self._screenshot
-
-    @property
-    def tree(self):
-        """
-        Returns a dict for use with http://bost.ocks.org/mike/treemap/
-        """
-
-        DATA_TAGS = ['dl', 'ol', 'ul', 'table']
-        INTERACTIVE_TAGS = ['form']
-
-        if not hasattr(self, '_tree'):
-            self._tree = {'name': self.webdriver.title,
-                          'children': []}
-
-            # this is a little ugly but it will do for now
-            for page_object_tag in DATA_TAGS + INTERACTIVE_TAGS:
-                web_elements = self.webdriver.find_elements_by_tag_name(page_object_tag)
-                for web_element in web_elements:
-                    size = web_element.size
-                    area = size.get('height', 0) * size.get('width', 0)
-                    if area:
-                        location = web_element.location
-                        crop_box = (location['x'],
-                                    location['y'],
-                                    location['x'] + size['width'],
-                                    location['y'] + size['height'])
-                        # also need to treat the crop as a tempfile until we get pypotrace working
-                        screencrop_filename = str(uuid.uuid4()) + '.png'
-                        self.screenshot.crop(crop_box).save(settings.MEDIA_ROOT + 'images/treemap/' + screencrop_filename)
-                        self._tree['children'].append({'name': web_element.tag_name,
-                                                       'value': area,
-                                                       'screencrop_url': settings.MEDIA_URL + 'images/treemap/' + screencrop_filename})
-
-        return self._tree
 
 
 class Action(ExtendedModel):

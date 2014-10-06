@@ -8,25 +8,8 @@
     YOU CAN CLICK AROUND ON THE TREEMAP AND DEFINE WHICH AUTOMATED ACTIONS YOU WOULD LIKE ME TO TAKE ON THIS PAGE.
 </h4>
 {% endblocktrans %}
-<p id="chart"></p>
-<script>
-    var root = {{ tree|safe }}
-</script>
-<script src="{{STATIC_URL}}javascript/node_modules/d3/d3.min.js"></script>
-<script src="{{STATIC_URL}}javascript/visualization/treemap.js"></script>
-<script src="{{STATIC_URL}}javascript/visualization/svg_test.js"></script>
-
-<h4>
-    SVG SCALING TEST
-</h4>
-
-<div id="svg_test">
-    <svg version="1.1"
-        xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        width="1200" height="620">
-        <g id="svg_test_group">
-            <image id="svg_test_image" x="0" y="0" width="600" height="436" xlink:href="http://i.imgur.com/YxZstHM.jpg"/>
-        </g>
-    </svg>
+<div id="viewport" style="width:{{viewport_width}}px;height:{{viewport_height}}px">
+    <image id="screenshot" style="width:{{page_width}}px;height:{{page_height}}px" src="{{MEDIA_URL}}images/screenshots/{{screenshot}}">
 </div>
+<script src="{{STATIC_URL}}javascript/visualization/magick_scroll.js"></script>
 {% endblock %}
