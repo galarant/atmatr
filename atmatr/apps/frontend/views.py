@@ -169,5 +169,9 @@ class ScriptView(TemplateView, AuthenticatedView):
         """
 
         context = super(ScriptView, self).get_context_data(**kwargs)
-        context['tree'] = json.dumps(self.page.tree)
+        context['viewport_width'] = self.page.VIEWPORT_SIZE[0]
+        context['viewport_height'] = self.page.VIEWPORT_SIZE[1]
+        context['page_width'] = self.page.size[0]
+        context['page_height'] = self.page.size[1]
+        context['screenshot'] = self.page.screenshot
         return context
