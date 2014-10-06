@@ -120,7 +120,6 @@ class Page(ExtendedModel):
         return self._screenshot
 
 
-
 class Action(ExtendedModel):
 
     """
